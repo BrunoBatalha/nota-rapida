@@ -6,19 +6,25 @@ export default function App() {
   const [text, setText] = useState('');
 
   useEffect(() => {
-    AsyncStorage.getItem('text').then((data: string | null) => {
-      setText(data || '')
-    }).catch(err => alert('Erro em recuperar nota anterior' + err))
+    loadText()
   }, [])
 
-  function saveText(text: string) {
-    AsyncStorage.setItem('text', text)
+  async function saveText(text: string) {
+    try {
+      await AsyncStorage.setItem('text', text)
+      alert('Nota salva')
+    } catch (err) {
+      alert('Erro: '+err)
+    }
   }
 
-  function getText() {
-    AsyncStorage.getItem('text').then((data: string | null) => {
+  async function loadText() {
+    try {
+      const data:string | null = await AsyncStorage.getItem('text')
       setText(data || '')
-    }).catch(err => alert('Erro em recuperar nota anterior' + err))
+    } catch (err) {
+      alert('Erro em recuperar nota anterior' + err)
+    }
   }
 
   return (
@@ -33,7 +39,7 @@ export default function App() {
       </TextInput>
       {/* <Button title='Salvar' onPress={e => saveText(text)} />
       <Button title='Mostrar antigo' onPress={e => getText()} /> */}
-      <TouchableOpacity style={styles.buttonSave}>
+      <TouchableOpacity style={styles.buttonSave} onPress={e=>saveText(text)}>
         <Text style={styles.buttonSaveText}>Salvar</Text>
       </TouchableOpacity>
     </View>
