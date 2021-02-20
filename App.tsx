@@ -1,21 +1,52 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TextInput, Dimensions, Button, AsyncStorage, TouchableOpacity } from 'react-native';
-
+import React, { useEffect, useRef, useState } from 'react';
+import { StyleSheet, Text, View, TextInput, Dimensions, AsyncStorage, TouchableOpacity, ScrollView, Clipboard, ToastAndroid, Alert, BackHandler } from 'react-native';
+import {Feather, MaterialIcons} from '@expo/vector-icons';
 export default function App() {
 
-  const [fields, setFields]:any = useState([{text: 'bruo'}]);
+  const scrollFields = useRef< null | HTMLElement>(null);
+  const [fields, setFields]:any = useState<String[]>([]);
 
   useEffect(() => {
     loadFields();
-  }, [])
+  }, []);
+
+  useEffect(() => {
+    if (scrollFields.current) {
+      scrollFields.current.scrollToEnd({animated: true});
+    }
+  }, [fields]);
+
+  useEffect(() => {
+    // componentDidMount    
+    const backAction = () => {
+      showAlert('Até depois :D','Deseja realmente sair? Não esqueça de salvar suas alterações',()=>{BackHandler.exitApp()})
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+
+    // componentWillUnmount
+    return () => backHandler.remove();
+  }, []);
+
 
   async function saveFields(fields: any) {
     try {
       await AsyncStorage.setItem('fields', fields.join('SEPARATOR'));
-      alert('Salvo');
+      showToast('Salvo');
     } catch (err) {
       alert('Erro: '+err);
     }
+  }
+
+  function showToast(text:string){
+    ToastAndroid.showWithGravityAndOffset(
+      text,
+      ToastAndroid.SHORT,
+      ToastAndroid.BOTTOM,
+      25,
+      100
+    );
   }
 
   async function loadFields() {
@@ -37,36 +68,77 @@ export default function App() {
     setFields(newFields);
   }
   
-  function removeField(index:number){
-    const newFields = [...fields.filter((field:any,idx:number)=> idx != index)];
-    setFields(newFields);
+  function deleteField(index:number){
+    showAlert(
+      'Cuidado!',
+      "Deseja realmente excluir este campo? Esta ação não pode ser desfeita",
+      ()=>{
+        const newFields = [...fields.filter((field:any,idx:number)=> idx != index)];
+        setFields(newFields);
+      });    
+  }
+
+  function showAlert(title:string, description:string, cbConfirm,  cbCancel=()=>{}){
+    Alert.alert(title, description,
+      [
+        {
+          text: "Cancelar",
+          onPress: () => cbCancel(),
+        },
+        { 
+          text: "Continuar", 
+          onPress: () => cbConfirm()
+        }
+      ],
+      { cancelable: false }
+    )
+  }
+
+  function copyField(text:string)  {
+    Clipboard.setString(text);
+    showToast('Copiado');
   }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Nota Rápida</Text>
-      {fields.map((field:any,index:number)=>
-        <View style={styles.containerField}>
-          <TextInput
-            key={index}
-            multiline={true}
-            style={styles.fieldText}
-            value={field}
-            onChangeText={text=>handleChangeText(text,index)}
-            placeholder='Ex.: Assistir 2° temporada do anime X' >
-          </TextInput>        
-          <TouchableOpacity style={styles.buttonDelete} onPress={e=>removeField(index)}>
-            <Text style={styles.buttonDeleteText}>-</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-      <TouchableOpacity style={styles.buttonAdd} onPress={e=>addField()}>
-        <Text style={styles.buttonSaveText}>Novo campo</Text>
-      </TouchableOpacity>
 
-      <TouchableOpacity style={styles.buttonSave} onPress={e=>saveFields(fields)}>
-        <Text style={styles.buttonSaveText}>Salvar</Text>
-      </TouchableOpacity>
+      <ScrollView style={{height: '100%', marginBottom: 40}} ref={scrollFields}>
+          {fields.map((field:any,index:number)=>
+              <View style={styles.containerField} key={index}>                
+                <TextInput
+                  multiline={true}
+                  style={styles.fieldText}
+                  value={field}
+                  onChangeText={text=>handleChangeText(text,index)}
+                  placeholder='Ex.: Assistir 2° temporada do anime X' >
+                </TextInput>        
+                <TouchableOpacity  style={styles.buttonIcon} onPress={e=>copyField(field)}>
+                  <Feather name='copy' size={20} color='#353839' />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.buttonIcon}  onPress={e=>deleteField(index)}>
+                  <MaterialIcons name='delete' size={21} color='red' />
+                </TouchableOpacity>
+              </View>        
+          )}
+      </ScrollView>
+        
+      <View style={styles.containerButtons}>
+        <TouchableOpacity style={{...styles.buttonSave, ...styles.centerContent}} 
+        onPress={e=>saveFields(fields)}>
+          {/* <Text style={styles.buttonSaveText}>Salvar
+          </Text> */}
+            <Feather name='save' size={20} color='#fff' />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={{...styles.buttonAdd, ...styles.centerContent}} 
+          onPress={e=>addField()}>
+          {/* <Text style={styles.buttonSaveText}>Novo
+          </Text> */}
+            <Feather name='plus' size={20} color='#fff' />
+          
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -83,21 +155,19 @@ const styles = StyleSheet.create({
     borderBottomColor: '#c3c3c3',
     borderBottomWidth: 2
   },
+  buttonIcon:{
+    flex: 1,
+  },
   fieldText: {
-    width: '90%',
+    flex: 10,
     fontSize: 16,
     borderBottomColor: '#5CB7F4',
     borderBottomWidth: 2,
     marginRight: 5
   },
   buttonAdd: {
-    marginTop: 15,
-    width: '100%',
     backgroundColor: '#000',
-    height: 40,
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flex:1
   },
   buttonDelete: {
     backgroundColor: '#000',
@@ -107,15 +177,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  buttonSave: {
-    position: 'absolute',
-    bottom: 0,
-    width: Dimensions.get('window').width,
-    backgroundColor: '#5CB7F4',
-    height: 40,
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
+  buttonSave: {    
+    backgroundColor: '#008000',
+    flex:1
   },
   buttonDeleteText: {
     color: 'red',
@@ -134,5 +198,18 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     marginTop: 15,
+    padding: 5
+  },
+  containerButtons:{
+    position: 'absolute',
+    bottom: 0,
+    height: 50,
+    width: Dimensions.get('window').width,
+    flexDirection: 'row',
+  },
+  centerContent:{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center'
   }
 });
