@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, AsyncStorage, BackHandler, StatusBar, } from 'react-native';
-import * as eva from '@eva-design/eva';
-import { ApplicationProvider, Text, Layout, Button, IconRegistry } from '@ui-kitten/components';
-import { default as theme } from './custom-theme.json';
-// https://akveo.github.io/eva-icons/#/
-import { EvaIconsPack } from '@ui-kitten/eva-icons';
+import { StyleSheet, AsyncStorage, BackHandler } from 'react-native';
+import { Text, Layout, Button, Icon } from '@ui-kitten/components';
 
 import NoteList from '../features/note/views/NoteList';
 import { INote } from '../features/note/views/types';
@@ -13,11 +9,11 @@ import { PlusIcon, SaveIcon } from '../shared/icons';
 import { showAlert, showToast } from '../shared/utils/utils';
 
 import { NoteContext } from '../features/note/noteContext';
-
+import shortid from 'shortid';
 
 const TEXTS_KEY = 'fields';
 
-export default function App() {
+const App = () => {
 
     const [notes, setNotes] = useState<INote[]>([]);
 
@@ -42,7 +38,7 @@ export default function App() {
         return () => backHandler.remove();
     }, []);
 
-    async function saveNotes(notes: INote[]) {
+    async function saveNotes() {
         try {
             const texts = notes.map((note: INote) => note.text);
             await AsyncStorage.setItem(TEXTS_KEY, texts.join('SEPARATOR'));
@@ -59,30 +55,37 @@ export default function App() {
             if (!data) return [];
 
             const texts = data.split('SEPARATOR');
-            const notes = texts.map(text => ({ text, visibleMenu: false }));
+            const notes = texts.map(text => ({ text, visibleMenu: false, id: shortid.generate() }));
 
             return notes || [];
         } catch (err) {
-            alert('Erro em recuperar nota anterior' + err)
+            alert('Erro em recuperar notas' + err)
             return [];
         }
     }
 
     function addNote() {
-        setNotes([...notes, { text: '', visibleMenu: false }]);
+        setNotes([...notes, { text: '', visibleMenu: false, id: shortid.generate() }]);
     }
 
-    // function onChangeText(text: string, index: number) {
-    //     setNotes([
-    //         ...notes.slice(0, (index + 1) - 1),
-    //         { ...notes[index], text: text },
-    //         ...notes.slice((index + 1))])
-    // }
+    function setText(text: string, index: number) {
+        setNotes([
+            ...notes.slice(0, (index + 1) - 1),
+            { ...notes[index], text: text },
+            ...notes.slice((index + 1))])
+    }
+
+    function setVisibleMenu(visibleMenu: boolean, index: number) {
+        setNotes([
+            ...notes.slice(0, (index + 1) - 1),
+            { ...notes[index], visibleMenu: visibleMenu },
+            ...notes.slice((index + 1))])
+    }
 
     function deleteNote(index: number) {
         showAlert(
-            'Cuidado!',
-            "Deseja realmente excluir este campo? Esta ação não pode ser desfeita",
+            'Excluir',
+            "Você tem certeza? Esta ação não pode ser desfeita",
             () => {
                 // const updatedFields: INote[] = [...notes.filter((note: INote, idx: number) => idx != index)];
                 const updatedFields = [...notes.slice(0, index), ...notes.slice(index + 1, notes.length)];
@@ -90,34 +93,28 @@ export default function App() {
             });
     }
 
-
     return (
-        <ApplicationProvider {...eva} theme={{ ...eva.dark, ...theme }}>
-            <IconRegistry icons={EvaIconsPack} />
-            <StatusBar hidden={true} />
+        <Layout style={styles.container}>
+            <Text style={styles.title}>Nota Rápida</Text>
 
-            <Layout style={styles.container}>
-                <Text style={styles.title}>Nota Rápida</Text>
+            <NoteContext.Provider value={{ deleteNote, setText, setVisibleMenu }}>
+                <NoteList notes={notes} />
+            </NoteContext.Provider>
 
-                <NoteContext.Provider value={{ deleteNote: deleteNote }}>
-                    <NoteList notes={notes} />
-                </NoteContext.Provider>
-
-                <Layout style={styles.containerButtons}>
-                    <Button style={{ ...styles.button, ...styles.centerContent }}
-                        onPress={e => saveNotes(notes)}
-                        status='success'
-                        accessoryLeft={SaveIcon} />
-
-                    <Button style={{ ...styles.button, ...styles.centerContent }}
-                        onPress={e => addNote()}
-                        accessoryLeft={PlusIcon} />
-                </Layout>
-
+            <Layout style={styles.containerButtons}>
+                <Button style={{ ...styles.button, ...styles.centerContent }}
+                    onPress={saveNotes}
+                    status='success'
+                    accessoryLeft={SaveIcon} />
+                <Button style={{ ...styles.button, ...styles.centerContent }}
+                    onPress={addNote}
+                    accessoryLeft={PlusIcon} />
             </Layout>
-        </ApplicationProvider>
+        </Layout>
     );
 }
+
+export default App;
 
 const styles = StyleSheet.create({
     container: {

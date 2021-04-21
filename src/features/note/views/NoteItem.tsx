@@ -1,15 +1,16 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 
 import { Layout, Input } from '@ui-kitten/components';
 import { StyleSheet } from "react-native";
 
-import NoteItemMenu from './noteItemMenu';
+import NoteItemMenu from './NoteItemMenu';
 
 import { INoteItem } from './types';
+import { NoteContext } from "../noteContext";
 
 const NoteItem = ({ text, visibleMenu, index }: INoteItem) => {
 
-    const [itemText, setItemText] = useState<string>(text);
+    const noteContext = useContext(NoteContext);
 
     return (
         <Layout style={styles.container}>
@@ -17,20 +18,20 @@ const NoteItem = ({ text, visibleMenu, index }: INoteItem) => {
                 // keyboardAppearance='dark' TODO: testar se caso isso comentado, consigo copiar e colar nos campos
                 style={styles.input}
                 multiline
-                onChangeText={text => setItemText(text)}
-                value={itemText}
+                onChangeText={text => noteContext.setText(text, index)}
+                value={text}
                 placeholder='Ex.: Re:zero, Jujutsu Kaisen...'
             />
             <NoteItemMenu
                 visibleMenu={visibleMenu}
                 text={text}
-                index={index}                
-            />            
+                index={index}
+            />
         </Layout>
-    )
+    );
 }
 
-export default NoteItem;
+export default React.memo(NoteItem);
 
 
 const styles = StyleSheet.create({

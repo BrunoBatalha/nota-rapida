@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 
 import { Button, MenuItem, OverflowMenu } from '@ui-kitten/components';
 
@@ -9,11 +9,25 @@ import { NoteContext } from "../noteContext";
 
 const NoteItemMenu = ({ text, visibleMenu, index }: INoteItem) => {
 
-    const [visibleMenuItem, setVisibleMenuItem] = useState<boolean>(visibleMenu);
-    const noteContext = useContext(NoteContext)
+    const noteContext = useContext(NoteContext);
+
+    function setVisibleMenu(visible: boolean){
+        noteContext.setVisibleMenu(visible, index);
+    }
 
     function deleteNote() {
+        setVisibleMenu(false);
         noteContext.deleteNote(index);
+    }
+
+    function copyText() {
+        setVisibleMenu(false);
+        copyToClipboard(text);
+        showToast('Copiado');
+    }
+
+    function onBackdropPress(){
+        setVisibleMenu(false);
     }
 
     function renderToggleButton() {
@@ -21,26 +35,22 @@ const NoteItemMenu = ({ text, visibleMenu, index }: INoteItem) => {
             <Button
                 status='basic'
                 appearance='ghost'
-                onPress={() => setVisibleMenuItem(true)}
+                onPress={() => setVisibleMenu(true) }
                 accessoryLeft={MenuFieldIcon}
             />
         );
-    }
-
-    function copyText(text: string) {
-        copyToClipboard(text);
-        showToast('Copiado');
-    }
+    }    
 
     return (
         <OverflowMenu
-            visible={visibleMenuItem}
-            anchor={() => renderToggleButton()}
-            onBackdropPress={() => { setVisibleMenuItem(false) }}
+            visible={visibleMenu}
+            anchor={renderToggleButton}
+            onBackdropPress={onBackdropPress}
         >
-            <MenuItem title="Copiar" accessoryLeft={CopyIcon} onPress={() => copyText(text)} />
-            <MenuItem title="Excluir" accessoryLeft={DeleteIcon} onPress={() => deleteNote()} />
+            <MenuItem title="Copiar" accessoryLeft={CopyIcon} onPress={copyText} />
+            <MenuItem title="Excluir" accessoryLeft={DeleteIcon} onPress={deleteNote} />
         </OverflowMenu>
     )
 }
-export default NoteItemMenu;
+
+export default React.memo(NoteItemMenu);
