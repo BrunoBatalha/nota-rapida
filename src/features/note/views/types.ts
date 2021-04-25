@@ -11,7 +11,8 @@ export interface INoteItem{
 }
 
 export interface INoteContext {
-  deleteNote: (index: number) => void;
-  setText: (text:string, index:number) => void,
-  setVisibleMenu: (visibleMenu:boolean, index:number) => void,
+  deleteNote: (id:string) => void;
+  setText: (text:string, id:string) => void,
+  setVisibleMenu: (visibleMenu:boolean, id:string) => void,
+  notes: any
 }

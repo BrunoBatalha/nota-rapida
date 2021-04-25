@@ -41,3 +41,7 @@ export const showAlert = (
 export const copyToClipboard = (string: string) => {
   Clipboard.setString(string);
 };
+
+export const clipboardPaste = (): Promise<string> =>{
+    return Clipboard.getString().then(paste => paste).catch(err=>err);
+}

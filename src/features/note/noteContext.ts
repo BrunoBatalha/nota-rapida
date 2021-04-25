@@ -5,11 +5,12 @@ const contextDefault = {
   deleteNote: () => {
     throw 'Not implemented';
   },
-  setText: (text: string, index: number) => {
+  setText: () => {
     throw 'Not implemented';
   },
-  setVisibleMenu: (visibleMenu: boolean, index: number) => {
+  setVisibleMenu: () => {
     throw 'Not implemented';
   },
+  notes: {}
 };
 export const NoteContext = React.createContext<INoteContext>(contextDefault);

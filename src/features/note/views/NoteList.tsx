@@ -1,13 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet } from "react-native";
-import shortid from 'shortid'
 import { List } from "@ui-kitten/components";
 
 import NoteItem from './NoteItem';
 import { INote, INoteItem } from "./types";
-// import { usePrevious } from "../../../shared/hooks/usePrevious";
 
-const NoteList = ({ notes }: { notes: INote[] }) => {
+const NoteList = ({ notes }: { notes: INote }) => {
 
     // const scrollFields = useRef<null | HTMLElement>(null);
     // const prevLength = usePrevious(notes.length);
@@ -20,13 +18,12 @@ const NoteList = ({ notes }: { notes: INote[] }) => {
     //     }
     // }, [notes.length]);
 
-    function keyExtractor(item:INote){
-        return item.id;
+    function keyExtractor(id: string) {
+        return id;
     }
 
-    function renderItem({ item, index }: { item: INoteItem, index: number }) {
-        console.log(index)
-        return (<NoteItem text={item.text} visibleMenu={item.visibleMenu} index={index} />);
+    function renderItem({ item, index }: { item: string, index:number }) {
+        return (<NoteItem id={item} />);
     }
 
     return (
@@ -34,7 +31,7 @@ const NoteList = ({ notes }: { notes: INote[] }) => {
             // ref={scrollFields}
             style={styles.list}
             removeClippedSubviews={true}
-            data={notes}
+            data={Object.keys(notes).map(id => id)}
             keyExtractor={keyExtractor}
             renderItem={renderItem}
         />

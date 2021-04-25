@@ -15,7 +15,7 @@ const TEXTS_KEY = 'fields';
 
 const App = () => {
 
-    const [notes, setNotes] = useState<INote[]>([]);
+    const [notes, setNotes] = useState<any>({});
 
     useEffect(() => {
         getNotes().then(setNotes);
@@ -40,7 +40,8 @@ const App = () => {
 
     async function saveNotes() {
         try {
-            const texts = notes.map((note: INote) => note.text);
+            // const texts = notes.map((note: INote) => note.text);
+            const texts = Object.keys(notes).map(id => notes[id].text);
             await AsyncStorage.setItem(TEXTS_KEY, texts.join('SEPARATOR'));
 
             showToast('Salvo');
@@ -49,55 +50,63 @@ const App = () => {
         }
     }
 
-    async function getNotes(): Promise<INote[]> {
+    async function getNotes(): Promise<any> {
         try {
             const data: string | null = await AsyncStorage.getItem(TEXTS_KEY);
             if (!data) return [];
 
             const texts = data.split('SEPARATOR');
-            const notes = texts.map(text => ({ text, visibleMenu: false, id: shortid.generate() }));
+            const notes = texts.reduce((accumulator, text) => {
+                const randomId = shortid.generate();
+                return { ...accumulator, [randomId]: { text, visibleMenu: false, id: randomId } }
+            }, {});
 
-            return notes || [];
+            return notes;
         } catch (err) {
             alert('Erro em recuperar notas' + err)
-            return [];
+            return {};
         }
     }
 
     function addNote() {
-        setNotes([...notes, { text: '', visibleMenu: false, id: shortid.generate() }]);
+        const randomId = shortid.generate();
+        setNotes({ ...notes, [randomId]: { text: '', visibleMenu: false } });
     }
 
-    function setText(text: string, index: number) {
-        setNotes([
-            ...notes.slice(0, (index + 1) - 1),
-            { ...notes[index], text: text },
-            ...notes.slice((index + 1))])
-    }
-
-    function setVisibleMenu(visibleMenu: boolean, index: number) {
-        setNotes([
-            ...notes.slice(0, (index + 1) - 1),
-            { ...notes[index], visibleMenu: visibleMenu },
-            ...notes.slice((index + 1))])
-    }
-
-    function deleteNote(index: number) {
+    function deleteNote(id: string) {
         showAlert(
             'Excluir',
             "Você tem certeza? Esta ação não pode ser desfeita",
             () => {
-                // const updatedFields: INote[] = [...notes.filter((note: INote, idx: number) => idx != index)];
-                const updatedFields = [...notes.slice(0, index), ...notes.slice(index + 1, notes.length)];
-                setNotes(updatedFields);
+                // const updatedFields = [...notes.slice(0, index), ...notes.slice(index + 1, notes.length)];
+
+                const notesUpdated = Object.keys(notes).reduce((accumulator, noteId) => {
+                    if (noteId == id) return { ...accumulator };
+                    else return { ...accumulator, [noteId]: { ...notes[noteId] } };
+                }, {});
+                setNotes(notesUpdated);
             });
     }
 
+
+    function setText(text: string, id: string) {
+        const notesUpdated = {...notes};
+        notesUpdated[id].text = text;
+        setNotes(notesUpdated);
+    }
+
+    function setVisibleMenu(visibleMenu: boolean, id: string) {        
+        const notesUpdated = {...notes};
+        notesUpdated[id].visibleMenu = visibleMenu;
+        setNotes(notesUpdated);
+    }
+
+
     return (
         <Layout style={styles.container}>
-            <Text style={styles.title}>Nota Rápida</Text>
+            <Text style={styles.title}>Nota Rápida - v0.0.2</Text>
 
-            <NoteContext.Provider value={{ deleteNote, setText, setVisibleMenu }}>
+            <NoteContext.Provider value={{ deleteNote, setText, setVisibleMenu, notes }}>
                 <NoteList notes={notes} />
             </NoteContext.Provider>
 
@@ -123,7 +132,7 @@ const styles = StyleSheet.create({
     },
     title: {
         height: 56,
-        fontSize: 24,
+        fontSize: 20,
         textAlignVertical: "center",
     },
     button: {

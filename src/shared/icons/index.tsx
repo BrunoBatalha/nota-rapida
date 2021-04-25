@@ -5,6 +5,10 @@ export const CopyIcon = (props: any) => (
     <Icon {...props} name='copy' />
 );
 
+export const PasteIcon = (props: any) => (
+    <Icon {...props} name='clipboard' />
+);
+
 export const DeleteIcon = (props: any) => (
     <Icon {...props} name='trash-2' />
 );

@@ -6,7 +6,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "eject": "expo eject",
-    "build": "expo build:android"
+    "build": "expo build:android",
+    "publish": "expo publish",
+    "upload": "expo upload:android"
   },
   "dependencies": {
     "@eva-design/eva": "^2.0.0",
