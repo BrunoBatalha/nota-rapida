@@ -1,28 +1,46 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 
-import { Layout, Input, Text } from '@ui-kitten/components';
+import { Button, Layout, Text, Card, Modal, Input, ButtonGroup } from '@ui-kitten/components';
 import { StyleSheet } from "react-native";
 
-import NoteItemMenu from './NoteItemMenu';
+import { INote } from "../types";
+import { MenuFieldIcon } from "../../../shared/icons";
 
-import { NoteContext } from "../noteContext";
+const NoteItem = ({ note }: { note: INote }) => {
+    console.log('NOTE:::\N', note.content);
+    const [visibleModal, setVisibleModal] = useState(false);
 
-const NoteItem = ({ id }: {id: string}) => {
+    function closeModal() {
+        setVisibleModal(false);
+    }
 
-    const noteContext = useContext(NoteContext);
+    function openModal() {
+        setVisibleModal(true);
+    }
 
     return (
         <Layout style={styles.container}>
-            <Input
-                // keyboardAppearance='dark' TODO: testar se caso isso comentado, consigo copiar e colar nos campos
-                style={styles.input}
-                multiline
-                onChangeText={text => noteContext.setText(text, id)}
-                value={noteContext.notes[id].text}
-                placeholder='Ex.: Re:zero, Jujutsu Kaisen...'
-            />
-            {/* <Text style={styles.input}>{noteContext.notes[id].text}</Text> */}
-            <NoteItemMenu id={id}/>
+            <Text style={styles.text}>{note.content}</Text>
+
+            <Button style={styles.menuButton} onPress={openModal} accessoryLeft={MenuFieldIcon}></Button>
+            <Modal visible={visibleModal}
+                backdropStyle={styles.backdrop}
+                onBackdropPress={closeModal}>
+                {/* TODO: entender melhor o disabled */}
+                <Card disabled={true} style={styles.modal}>
+                    <Input
+                        style={styles.input}
+                        multiline
+                        onChangeText={text => { }}
+                        value={note.content}
+                        placeholder='Ex.: Re:zero, Jujutsu Kaisen...'
+                    />
+                    <Layout style={styles.containerButtons}>
+                        <Button onPress={closeModal} style={styles.button}>Voltar</Button>
+                        <Button onPress={closeModal} style={styles.button} status="success">Salvar</Button>
+                    </Layout>
+                </Card>
+            </Modal>
         </Layout>
     );
 }
@@ -31,10 +49,32 @@ export default React.memo(NoteItem);
 
 
 const styles = StyleSheet.create({
+    text: {
+        flex: 10,
+    },
     input: {
-        flex: 10
+        flex: 10,
+        height: 50
     },
     container: {
         flexDirection: 'row'
     },
+    menuButton: {
+        width: 4,
+        backgroundColor: '#222B45',
+        borderColor: '#222B45'
+    },
+    backdrop: {
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modal: {
+        margin: 8
+    },
+    containerButtons: {
+        marginTop: 8,
+        flexDirection: 'row',
+    },
+    button: {
+        flex: 1,
+    }
 });

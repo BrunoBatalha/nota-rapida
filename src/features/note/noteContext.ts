@@ -1,5 +1,5 @@
 import React from 'react';
-import { INoteContext } from './views/types';
+import { INoteContext } from './types';
 
 const contextDefault = {
   deleteNote: () => {

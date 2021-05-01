@@ -1,37 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { StyleSheet } from "react-native";
 import { List } from "@ui-kitten/components";
 
 import NoteItem from './NoteItem';
-import { INote, INoteItem } from "./types";
+import { INote } from "../types";
 
-const NoteList = ({ notes }: { notes: INote }) => {
-
-    // const scrollFields = useRef<null | HTMLElement>(null);
-    // const prevLength = usePrevious(notes.length);
-
-    // useEffect(() => {
-    //     if (notes.length > prevLength) {
-    //         setTimeout(() => {
-    //             scrollFields.current.scrollToEnd({ animated: true });
-    //         }, 100);
-    //     }
-    // }, [notes.length]);
-
-    function keyExtractor(id: string) {
-        return id;
+const NoteList = ({ notes }: { notes: INote[] }) => {
+    function keyExtractor(note: INote) {
+        return note.id;
     }
 
-    function renderItem({ item, index }: { item: string, index:number }) {
-        return (<NoteItem id={item} />);
+    function renderItem({ item }: { item: INote }) {
+        return (<NoteItem note={item} />);
     }
 
     return (
         <List
-            // ref={scrollFields}
             style={styles.list}
             removeClippedSubviews={true}
-            data={Object.keys(notes).map(id => id)}
+            data={notes}
             keyExtractor={keyExtractor}
             renderItem={renderItem}
         />
