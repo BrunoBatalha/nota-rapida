@@ -1,21 +1,34 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 
-import { Button, Layout, Text, Card, Modal, Input, ButtonGroup } from '@ui-kitten/components';
-import { StyleSheet } from "react-native";
+import { Button, Layout, Text, Card, Modal, Input } from '@ui-kitten/components';
+import { KeyboardAvoidingView, ScrollView, StyleSheet } from "react-native";
 
 import { INote } from "../types";
-import { MenuFieldIcon } from "../../../shared/icons";
+import { DeleteIcon, MenuFieldIcon, SaveIcon } from "../../../shared/icons";
+import { NoteContext } from "../noteContext";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const NoteItem = ({ note }: { note: INote }) => {
-    console.log('NOTE:::\N', note.content);
+
+    const noteContext = useContext(NoteContext);
     const [visibleModal, setVisibleModal] = useState(false);
+    const [content, setContent] = useState('');
+
+    useEffect(() => {
+        setContent(note.content)
+    }, [])
 
     function closeModal() {
+        setContent(note.content);
         setVisibleModal(false);
     }
 
     function openModal() {
         setVisibleModal(true);
+    }
+
+    async function updateNote() {
+        noteContext.updateNote({ ...note, content: content });
     }
 
     return (
@@ -31,14 +44,27 @@ const NoteItem = ({ note }: { note: INote }) => {
                     <Input
                         style={styles.input}
                         multiline
-                        onChangeText={text => { }}
-                        value={note.content}
+                        onChangeText={setContent}
+                        value={content}
                         placeholder='Ex.: Re:zero, Jujutsu Kaisen...'
-                    />
-                    <Layout style={styles.containerButtons}>
-                        <Button onPress={closeModal} style={styles.button}>Voltar</Button>
-                        <Button onPress={closeModal} style={styles.button} status="success">Salvar</Button>
-                    </Layout>
+                    />                    
+                        <KeyboardAwareScrollView
+                            enableOnAndroid 
+                        >
+                            <Layout style={styles.containerButtons}>
+                                <Button
+                                    onPress={updateNote}
+                                    status="danger"
+                                    style={styles.button}
+                                    accessoryLeft={DeleteIcon} />
+                                <Button
+                                    onPress={updateNote}
+                                    style={styles.button}
+                                    status="success"
+                                    accessoryLeft={SaveIcon} />
+
+                            </Layout>
+                        </KeyboardAwareScrollView>
                 </Card>
             </Modal>
         </Layout>
@@ -68,7 +94,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     modal: {
-        margin: 8
+        margin: 8,
     },
     containerButtons: {
         marginTop: 8,

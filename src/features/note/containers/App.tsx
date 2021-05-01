@@ -6,7 +6,7 @@ import NoteList from '../views/NoteList';
 import { INote } from '../types';
 
 import { PlusIcon } from '../../../shared/icons';
-import { showAlert } from '../../../shared/utils/utils';
+import { showAlert, showToast } from '../../../shared/utils/utils';
 
 import { NoteContext } from '../noteContext';
 import shortid from 'shortid';
@@ -62,6 +62,18 @@ const App = () => {
         }
     }
 
+    async function updateNote(noteUpdated: INote) {
+        try {
+            await noteService.update(noteUpdated);
+            const notesUpdated = await noteService.list();
+            console.log(notesUpdated);
+            setNotes(notesUpdated);
+            showToast('Atualizado');
+        } catch (err) {
+            alert('Erro em atualizar notas\n' + err)
+        }
+    }
+
     function deleteNote(note: INote) {
         showAlert(
             'Excluir',
@@ -92,9 +104,9 @@ const App = () => {
 
     return (
         <Layout style={styles.container}>
-            <Text style={styles.title}>Nota Rápida - v0.0.2</Text>
+            <Text style={styles.title}>Nota Rápida - v0.0.3</Text>
 
-            <NoteContext.Provider value={{ deleteNote, setText, setVisibleMenu }}>
+            <NoteContext.Provider value={{ deleteNote, updateNote }}>
                 <NoteList notes={notes} />
             </NoteContext.Provider>
 

@@ -12,8 +12,27 @@ function save(note: INote): Promise<INote[]> {
         [note.id, note.content],
         (_, result) => {
           const arrayResult = listSqlRowListAsArray(result.rows);
-          console.log('INSERT result.rowsAffected', result.rowsAffected);
-          console.log('INSERT note', note);
+          resolve([...arrayResult]);
+        },
+        (_, sqlError) => {
+          reject(sqlError);
+          return false;
+        }
+      );
+    });
+  });
+}
+
+function update(note: INote): Promise<INote[]> {
+  return new Promise((resolve, reject) => {
+    database.transaction((tx) => {
+      const sqlInsert = `UPDATE ${NOTE_TABLE} SET content=? WHERE id=?`;
+
+      tx.executeSql(
+        sqlInsert,
+        [note.content, note.id],
+        (_, result) => {
+          const arrayResult = listSqlRowListAsArray(result.rows);
           resolve([...arrayResult]);
         },
         (_, sqlError) => {
@@ -35,8 +54,6 @@ function list(): Promise<INote[]> {
         [],
         (tx, result) => {
           const arrayResult = listSqlRowListAsArray(result.rows);
-          console.log('SELECT result.rows', result.rows);
-          console.log('SELECT result.rows', arrayResult);
           resolve([...arrayResult]);
         },
         (tx, sqlError) => {
@@ -73,6 +90,7 @@ export const noteService = {
   save,
   list,
   remove,
+  update
 };
 
 function listSqlRowListAsArray(rows: SQLResultSetRowList): INote[] {

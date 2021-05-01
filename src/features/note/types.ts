@@ -11,6 +11,5 @@ export interface INoteItem {
 
 export interface INoteContext {
   deleteNote: (note: INote) => void;
-  setText: (text: string, id: string) => void;
-  setVisibleMenu: (visibleMenu: boolean, id: string) => void;
+  updateNote: (note: INote) => void;
 }
